@@ -47,7 +47,7 @@ for folder in os.listdir(lepusFindingsDir):
                             wildcardName = wildcardName[1:]
 
                         wildcardIP = line.decode("utf-8").split("|")[1]
-                        wildcards.append([wildcardName, wildcardIP])
+                        wildcards.append([wildcardName, wildcardIP.strip()])
 
             if wildcards:
                 for wildcard in wildcards:
@@ -61,15 +61,17 @@ for folder in os.listdir(lepusFindingsDir):
                                     for IP in re.findall(f"{hostname}\|(.*)$", resline.strip())[0].split(","):
                                         ARecords.append(IP)
 
-                        #if not re.search(f"\.{wildcard[0]}", url) and not wildcard[1] in ARecords:
-                        if not wildcard[1] in ARecords:
+                        if re.search(f"\.{wildcard[0]}", url) and wildcard[1] in ARecords:
+                            pass
+                        else:
                             cleanurls.append(url)
+                        #if not wildcard[1] in ARecords:
+                        #    cleanurls.append(url)
 
             else:
                 cleanurls = urls
 
     if cleanurls:
-
         with open(output, "a") as outfile:
             for cleanurl in list(set(cleanurls)):
                 outfile.write(f"{cleanurl}\n")
