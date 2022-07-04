@@ -61,7 +61,8 @@ for folder in os.listdir(lepusFindingsDir):
                                     for IP in re.findall(f"{hostname}\|(.*)$", resline.strip())[0].split(","):
                                         ARecords.append(IP)
 
-                        if not re.search(f"\.{wildcard[0]}", url) and not  wildcard[1] in ARecords:
+                        #if not re.search(f"\.{wildcard[0]}", url) and not wildcard[1] in ARecords:
+                        if not wildcard[1] in ARecords:
                             cleanurls.append(url)
 
             else:
