@@ -65,8 +65,6 @@ for folder in os.listdir(lepusFindingsDir):
                             pass
                         else:
                             cleanurls.append(url)
-                        #if not wildcard[1] in ARecords:
-                        #    cleanurls.append(url)
 
             else:
                 cleanurls = urls
