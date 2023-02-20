@@ -23,54 +23,58 @@ try:
 except:
     pass
 
-for folder in os.listdir(lepusFindingsDir):
-    cleanurls = []
+for domain in domainsToProcess:
+    print(f"[*] Processing {domain}")
+    
+    folderFiles = os.listdir(os.path.join(lepusFindingsDir, domain))
     urls = []
+    cleanUrls = []
+    wildcardDomains = []
+    wildcardIps = []
 
-    if folder in domainsToProcess or "all" in domainsToProcess:
+    if "urls.csv" in folderFiles:
+        with open(os.path.join(lepusFindingsDir, domain, "urls.csv"), "rb") as urlsFile:
+            for line in urlsFile.readlines():
+                urls.append(line.decode("utf-8").strip())
 
-        print(f"[*] Processing {folder}")
-        folderFiles = os.listdir(os.path.join(lepusFindingsDir, folder))
+    if "wildcards.csv" in folderFiles:
+        wildcards = []
 
-        if "urls.csv" in folderFiles:
-            with open(os.path.join(lepusFindingsDir, folder, "urls.csv"), "rb") as urlsFile:
-                for line in urlsFile.readlines():
-                    urls.append(line.decode("utf-8").strip())
+        with open(os.path.join(lepusFindingsDir, domain, "wildcards.csv"), "rb") as wildcardsFile:
+            for line in wildcardsFile.readlines():
+                wcline = line.decode("utf-8").strip()
 
-        if urls:
-            wildcards = []
-            if "wildcards.csv" in folderFiles:
-                with open(os.path.join(lepusFindingsDir, folder, "wildcards.csv"), "rb") as wildcardsFile:
-                    for line in wildcardsFile.readlines():
-                        wildcardName = line.decode("utf-8").split("|")[0]
+                wildcardDomains.append(wcline.split("|")[0].strip("."))
+                wildcardIps.extend(wcline.split("|")[1].split(","))
+        
+    if urls:
+        for url in urls:
+            hostname = urlparse(url).netloc.split(":")[0]
+            ips = []
 
-                        if wildcardName.startswith("."):
-                            wildcardName = wildcardName[1:]
+            with open(os.path.join(lepusFindingsDir, domain, "resolved_public.csv"), "rb") as resFile:
+                for line in resFile.readlines():
+                    resline = line.decode("utf-8").strip()
+                    if resline.startswith(hostname):
+                        ips.extend(resline.split("|")[1].split(","))
 
-                        wildcardIP = line.decode("utf-8").split("|")[1]
-                        wildcards.append([wildcardName, wildcardIP.strip()])
+            wcdMatch = False
+            wciMatch = False
 
-            if wildcards:
-                for wildcard in wildcards:
-                    for url in urls:
-                        hostname = urlparse(url).netloc.split(":")[0]
+            for wcDom in wildcardDomains:
+                if f".{wcDom}" in hostname:
+                    wcdMatch = True
+            
+            for wcIp in wildcardIps:
+                if wcIp in ips:
+                    wciMatch = True
 
-                        ARecords = []
-                        with open(os.path.join(lepusFindingsDir, folder, "resolved_public.csv")) as resolutionsFile:
-                            for resline in resolutionsFile:
-                                if re.findall(f"{hostname}\|(.*)$", resline.strip()):
-                                    for IP in re.findall(f"{hostname}\|(.*)$", resline.strip())[0].split(","):
-                                        ARecords.append(IP)
-
-                        if re.search(f"\.{wildcard[0]}", url) and wildcard[1] in ARecords:
-                            pass
-                        else:
-                            cleanurls.append(url)
-
+            if wcdMatch and wciMatch:
+                pass
             else:
-                cleanurls = urls
+                cleanUrls.append(url)
 
-    if cleanurls:
+    if cleanUrls:
         with open(output, "a") as outfile:
-            for cleanurl in list(set(cleanurls)):
+            for cleanurl in list(set(cleanUrls)):
                 outfile.write(f"{cleanurl}\n")
