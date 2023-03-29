@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 
 import os
-import re
-import shutil
-from dns.resolver import resolve
 from socket import gethostbyname
 from urllib.parse import urlparse
 from argparse import ArgumentParser, FileType
 
 parser = ArgumentParser(prog="urlSeparator.py", description="I find urls in Lepus directories")
 parser.add_argument("-d", "--domains", action="store", dest="domains", type=str, default="all", help="Domain output folders to process separated by commas (Default 'all')")
+parser.add_argument("-u", "--url-file", action="store", dest="urlFile", type=str, help="File containing urls, one per line")
 parser.add_argument("lepusFindingsDir", help="Location of Lepus findings directory", type=str)
 parser.add_argument("output", help="Output file location", type=str)
 args = parser.parse_args()
@@ -32,7 +30,12 @@ for domain in domainsToProcess:
     wildcardDomains = []
     wildcardIps = []
 
-    if "urls.csv" in folderFiles:
+    if args.urlFile:
+        with open(args.urlFile, "rb") as urlsFile:
+            for line in urlsFile.readlines():
+                urls.append(line.decode("utf-8").strip())
+     
+    elif "urls.csv" in folderFiles:
         with open(os.path.join(lepusFindingsDir, domain, "urls.csv"), "rb") as urlsFile:
             for line in urlsFile.readlines():
                 urls.append(line.decode("utf-8").strip())
