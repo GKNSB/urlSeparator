@@ -33,7 +33,11 @@ for domain in domainsToProcess:
     if args.urlFile:
         with open(args.urlFile, "rb") as urlsFile:
             for line in urlsFile.readlines():
-                urls.append(line.decode("utf-8").strip())
+                cleanLine = line.decode("utf-8").strip()
+                hostname = urlparse(cleanLine).netloc.split(":")[0]
+
+                if hostname.endswith(f"{domain}"):
+                    urls.append(cleanLine)
      
     elif "urls.csv" in folderFiles:
         with open(os.path.join(lepusFindingsDir, domain, "urls.csv"), "rb") as urlsFile:
